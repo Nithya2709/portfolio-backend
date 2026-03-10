@@ -1,7 +1,7 @@
 const express = require('express');
 const cors = require('cors');
 const bodyParser = require('body-parser');
-const nodemailer = require('nodemailer');
+const { Resend } = require('resend');
 require('dotenv').config();
 
 const app = express();
@@ -35,25 +35,13 @@ app.post('/api/contact', async (req, res) => {
         console.log(`Message : ${message}`);
         console.log('──────────────────────────────────────');
 
-        if (process.env.EMAIL_USER && process.env.EMAIL_PASS) {
-            const transporter = nodemailer.createTransport({
-                host: 'smtp.gmail.com',
-                port: 587,
-                secure: false,
-                requireTLS: true,
-                auth: {
-                    user: process.env.EMAIL_USER,
-                    pass: process.env.EMAIL_PASS
-                },
-                tls: {
-                    rejectUnauthorized: false
-                }
-            });
+        if (process.env.RESEND_API_KEY) {
+            const resend = new Resend(process.env.RESEND_API_KEY);
 
-            const mailOptions = {
-                from: process.env.EMAIL_USER,
-                to: process.env.EMAIL_USER,
-                replyTo: email,
+            await resend.emails.send({
+                from: 'Portfolio Contact <onboarding@resend.dev>',
+                to: process.env.EMAIL_TO,
+                reply_to: email,
                 subject: `Portfolio Contact: ${subject || name}`,
                 html: `
                     <div style="font-family: Arial, sans-serif; max-width: 600px; margin: 0 auto;">
@@ -67,7 +55,7 @@ app.post('/api/contact', async (req, res) => {
                             </tr>
                             <tr style="background: #f9f9f9;">
                                 <td style="padding: 8px; font-weight: bold; color: #555;">Email</td>
-                                <td style="padding: 8px;"><a href="mailto:${email}">${email}</a></td>
+                                <td style="padding: 8px;">${email}</td>
                             </tr>
                             <tr>
                                 <td style="padding: 8px; font-weight: bold; color: #555;">Subject</td>
@@ -78,17 +66,12 @@ app.post('/api/contact', async (req, res) => {
                                 <td style="padding: 8px; white-space: pre-wrap;">${message}</td>
                             </tr>
                         </table>
-                        <p style="color: #888; font-size: 12px; margin-top: 20px;">
-                            Sent from your portfolio contact form.
-                        </p>
                     </div>
                 `
-            };
-
-            await transporter.sendMail(mailOptions);
-            console.log('✅ Email sent successfully to', process.env.EMAIL_USER);
+            });
+            console.log('✅ Email sent successfully via Resend');
         } else {
-            console.log('ℹ️  Email not configured.');
+            console.log('ℹ️  Resend not configured — add RESEND_API_KEY to environment.');
         }
 
         res.json({
