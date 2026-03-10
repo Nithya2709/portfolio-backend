@@ -7,24 +7,18 @@ require('dotenv').config();
 const app = express();
 const PORT = process.env.PORT || 5000;
 
-// Middleware
 app.use(cors());
 app.use(bodyParser.json());
 app.use(bodyParser.urlencoded({ extended: true }));
 
-// ─── Routes ───────────────────────────────────────────────────────────────────
-
-// Health check
 app.get('/api/health', (req, res) => {
     res.json({ status: 'OK', message: 'Server is running' });
 });
 
-// Contact form endpoint
 app.post('/api/contact', async (req, res) => {
     try {
         const { name, email, subject, message } = req.body;
 
-        // Validate required fields
         if (!name || !email || !message) {
             return res.status(400).json({
                 success: false,
@@ -32,9 +26,8 @@ app.post('/api/contact', async (req, res) => {
             });
         }
 
-        // Log submission to console (always works even without email setup)
         console.log('──────────────────────────────────────');
-        console.log('📩 New Contact Form Submission');
+        console.log('��� New Contact Form Submission');
         console.log('──────────────────────────────────────');
         console.log(`Name    : ${name}`);
         console.log(`Email   : ${email}`);
@@ -42,22 +35,25 @@ app.post('/api/contact', async (req, res) => {
         console.log(`Message : ${message}`);
         console.log('──────────────────────────────────────');
 
-        // ── Email sending (only runs if EMAIL_USER & EMAIL_PASS are set in .env) ──
         if (process.env.EMAIL_USER && process.env.EMAIL_PASS) {
             const transporter = nodemailer.createTransport({
                 host: 'smtp.gmail.com',
-                port: 465,
-                secure: true,
+                port: 587,
+                secure: false,
+                requireTLS: true,
                 auth: {
                     user: process.env.EMAIL_USER,
                     pass: process.env.EMAIL_PASS
+                },
+                tls: {
+                    rejectUnauthorized: false
                 }
             });
 
             const mailOptions = {
                 from: process.env.EMAIL_USER,
-                to: process.env.EMAIL_USER,        // Sends to yourself
-                replyTo: email,                    // Reply goes to the sender
+                to: process.env.EMAIL_USER,
+                replyTo: email,
                 subject: `Portfolio Contact: ${subject || name}`,
                 html: `
                     <div style="font-family: Arial, sans-serif; max-width: 600px; margin: 0 auto;">
@@ -92,7 +88,7 @@ app.post('/api/contact', async (req, res) => {
             await transporter.sendMail(mailOptions);
             console.log('✅ Email sent successfully to', process.env.EMAIL_USER);
         } else {
-            console.log('ℹ️  Email not configured — set EMAIL_USER and EMAIL_PASS in .env to enable emails.');
+            console.log('ℹ️  Email not configured.');
         }
 
         res.json({
@@ -109,42 +105,7 @@ app.post('/api/contact', async (req, res) => {
     }
 });
 
-// Portfolio data endpoint
-app.get('/api/portfolio', (req, res) => {
-    const portfolioData = {
-        personalInfo: {
-            name: 'Nithya Sree',
-            role: 'Frontend Developer / CSE Student',
-            description: 'Crafting clean, functional web experiences. Passionate about React, front-end development, and building things that matter.',
-            email: 'your.email@example.com',
-            phone: '+91 12345 67890',
-            location: 'Hyderabad, India'
-        },
-        socialLinks: {
-            linkedin: '#',
-            github: '#',
-            instagram: '#',
-            email: 'mailto:your.email@example.com'
-        },
-        skills: [
-            { name: 'HTML5',       icon: 'fab fa-html5',    level: 90, category: 'frontend'   },
-            { name: 'CSS3',        icon: 'fab fa-css3-alt', level: 85, category: 'frontend'   },
-            { name: 'JavaScript',  icon: 'fab fa-js',       level: 80, category: 'languages'  },
-            { name: 'React JS',    icon: 'fab fa-react',    level: 70, category: 'frameworks' },
-            { name: 'Java',        icon: 'fab fa-java',     level: 75, category: 'languages'  },
-            { name: 'Git/GitHub',  icon: 'fab fa-git-alt',  level: 80, category: 'backend'    },
-            { name: 'MySQL',       icon: 'fas fa-database', level: 75, category: 'backend'    },
-            { name: 'Node.js',     icon: 'fas fa-cube',     level: 70, category: 'backend'    },
-            { name: 'Tailwind',    icon: 'fas fa-wind',     level: 80, category: 'frameworks' },
-            { name: 'REST APIs',   icon: 'fas fa-layer-group', level: 75, category: 'backend' }
-        ]
-    };
-
-    res.json(portfolioData);
-});
-
-// ─── Start Server ─────────────────────────────────────────────────────────────
 app.listen(PORT, () => {
-    console.log(`\n🚀 Server is running on http://localhost:${PORT}`);
-    console.log(`📋 Health check: http://localhost:${PORT}/api/health\n`);
+    console.log(`\n��� Server is running on http://localhost:${PORT}`);
+    console.log(`��� Health check: http://localhost:${PORT}/api/health\n`);
 });
